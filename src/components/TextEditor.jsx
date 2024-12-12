@@ -2,6 +2,7 @@ import  { useCallback,useEffect, useState } from 'react';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
 import {io} from "socket.io-client"
+import { useParams } from 'react-router-dom';
 
 const toolbarOptions = [
     ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
@@ -25,11 +26,12 @@ const toolbarOptions = [
   ];
 
 export default function TextEditor() {
+    const {id:documentId} = useParams();
     const [socket,setSocket] = useState();
     const [quill,setQuill] = useState();
 
     useEffect(()=>{
-    const sock = io("http://192.168.0.159:6069");
+    const sock = io("http://localhost:6069");
     setSocket(sock);
 
     return()=>{
@@ -52,9 +54,6 @@ export default function TextEditor() {
         }
     },[socket,quill]);
 
-
-
-
     useEffect(()=>{
         if(socket == null || quill == null) return;
 
@@ -70,6 +69,22 @@ export default function TextEditor() {
     },[socket,quill]);
 
 
+    useEffect(()=>{
+        if(socket == null || quill == null) return;
+
+        socket.once("load-document",(document) =>{
+              quill.setContents(document)
+              quill.enable();
+        })
+
+        socket.emit("send-documentId",documentId)
+
+        return ()=>{
+           
+        }
+    },[socket,quill,documentId]);
+
+
     const quillwrapper = useCallback((wrapper) => {
         if(wrapper == null) return;
         wrapper.innerHTML = '';
@@ -81,6 +96,8 @@ export default function TextEditor() {
             },
             theme: "snow"
         });
+        qll.disable()
+        qll.setText("Loading ...")
         setQuill(qll)
     },[]);
 
