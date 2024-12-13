@@ -31,7 +31,7 @@ export default function TextEditor() {
     const [quill,setQuill] = useState();
 
     useEffect(()=>{
-    const sock = io("http://localhost:6069");
+    const sock = io("http://192.168.0.163:6069/");
     setSocket(sock);
 
     return()=>{
@@ -83,6 +83,17 @@ export default function TextEditor() {
            
         }
     },[socket,quill,documentId]);
+
+    useEffect(()=>{
+        if(socket == null || quill == null) return;
+           
+        const interval = setInterval(()=>{
+         socket.emit("save-document", quill.getContents())
+        },2000)
+        return ()=>{
+            clearInterval(interval);
+        }
+    },[socket,quill])
 
 
     const quillwrapper = useCallback((wrapper) => {
